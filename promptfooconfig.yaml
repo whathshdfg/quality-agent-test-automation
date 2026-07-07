@@ -1,0 +1,16 @@
+description: "质量效能测试 Agent 评测"
+
+prompts:
+  - "{{requirement}}"
+
+providers:
+  - id: echo
+
+tests:
+  - vars:
+      requirement: "请为订单取消功能生成测试用例"
+    assert:
+      - type: contains
+        value: "取消"
+      - type: contains
+        value: "测试"

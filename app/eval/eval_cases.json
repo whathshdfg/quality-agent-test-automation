@@ -1,0 +1,18 @@
+
+[
+  {
+    "case_name": "订单取消场景",
+    "requirement": "用户主动取消未接单订单后，订单状态变为 cancelled。如果订单创建后 3 分钟内没有司机接单，系统自动取消订单。如果司机已接单，用户取消订单时必须记录取消原因。订单取消后司机资源应释放。",
+    "expected_keywords": ["cancelled", "司机资源", "缺陷分析"]
+  },
+  {
+    "case_name": "订单创建场景",
+    "requirement": "用户输入起点和终点后，系统创建订单并返回 order_id。如果起点为空，系统返回 PARAM_ERROR。如果用户存在未完成订单，系统应禁止重复下单。",
+    "expected_keywords": ["order_id", "PARAM_ERROR", "重复下单"]
+  },
+  {
+    "case_name": "支付场景",
+    "requirement": "行程结束后，用户进入支付页面。支付成功后订单状态变为 paid。支付失败时订单保持 unpaid。重复支付时系统应返回 REPEAT_PAYMENT。",
+    "expected_keywords": ["paid", "REPEAT_PAYMENT", "支付"]
+  }
+]
