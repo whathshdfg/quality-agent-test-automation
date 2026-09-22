@@ -121,6 +121,29 @@ textarea:focus {
   margin-top: 16px;
 }
 
+.mode-control {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border: 1px solid #c9d7e6;
+  border-radius: 8px;
+  background: #f5f8fb;
+}
+
+.mode-button {
+  border-radius: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  color: #52657a;
+}
+
+.mode-button.active {
+  background: #0f4c81;
+  color: white;
+}
+
 button {
   border: none;
   border-radius: 12px;
@@ -179,7 +202,7 @@ button:disabled {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(110px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
   margin-bottom: 18px;
 }

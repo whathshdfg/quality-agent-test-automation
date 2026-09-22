@@ -1,0 +1,189 @@
+{
+  "dataset_version": "1.0.0",
+  "total_cases": 3,
+  "business_classification_accuracy": 100.0,
+  "average_rule_recall_rate": 100.0,
+  "average_rule_to_test_point_rate": 100.0,
+  "average_layer_coverage_rate": 94.44,
+  "invalid_reference_count": 0,
+  "non_executable_test_point_count": 0,
+  "fallback_count": 6,
+  "details": [
+    {
+      "case_id": "ACCEPT_CANCEL_001",
+      "expected_business_type": "order_cancel",
+      "actual_business_types": [
+        "order_cancel"
+      ],
+      "business_classification_correct": true,
+      "expected_rule_ids": [
+        "REQ_CANCEL_001",
+        "REQ_CANCEL_002",
+        "REQ_CANCEL_003",
+        "REQ_CANCEL_004"
+      ],
+      "actual_rule_ids": [
+        "REQ_CANCEL_001",
+        "REQ_CANCEL_002",
+        "REQ_CANCEL_003",
+        "REQ_CANCEL_004"
+      ],
+      "matched_rule_ids": [
+        "REQ_CANCEL_001",
+        "REQ_CANCEL_002",
+        "REQ_CANCEL_003",
+        "REQ_CANCEL_004"
+      ],
+      "rule_recall_rate": 100.0,
+      "expected_categories": [
+        "data_quality",
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "resource_dependency",
+        "state_flow"
+      ],
+      "actual_categories": [
+        "data_quality",
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "resource_dependency",
+        "state_flow"
+      ],
+      "matched_categories": [
+        "data_quality",
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "resource_dependency",
+        "state_flow"
+      ],
+      "layer_coverage_rate": 100.0,
+      "rule_to_test_point_rate": 100.0,
+      "invalid_reference_ids": [],
+      "non_executable_test_points": 0,
+      "requirement_source": "rule",
+      "test_point_source": "rule",
+      "fallback_count": 2,
+      "requirement_fallback_reason": "RuntimeError: rule-only evaluation",
+      "test_point_fallback_reason": "RuntimeError: rule-only evaluation",
+      "requirement_rule_count": 4,
+      "test_point_count": 14
+    },
+    {
+      "case_id": "ACCEPT_PAYMENT_001",
+      "expected_business_type": "payment",
+      "actual_business_types": [
+        "payment"
+      ],
+      "business_classification_correct": true,
+      "expected_rule_ids": [
+        "REQ_PAY_001",
+        "REQ_PAY_002",
+        "REQ_PAY_003"
+      ],
+      "actual_rule_ids": [
+        "REQ_PAY_001",
+        "REQ_PAY_002",
+        "REQ_PAY_003"
+      ],
+      "matched_rule_ids": [
+        "REQ_PAY_001",
+        "REQ_PAY_002",
+        "REQ_PAY_003"
+      ],
+      "rule_recall_rate": 100.0,
+      "expected_categories": [
+        "data_quality",
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "state_flow"
+      ],
+      "actual_categories": [
+        "data_quality",
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "state_flow"
+      ],
+      "matched_categories": [
+        "data_quality",
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "state_flow"
+      ],
+      "layer_coverage_rate": 100.0,
+      "rule_to_test_point_rate": 100.0,
+      "invalid_reference_ids": [],
+      "non_executable_test_points": 0,
+      "requirement_source": "rule",
+      "test_point_source": "rule",
+      "fallback_count": 2,
+      "requirement_fallback_reason": "RuntimeError: rule-only evaluation",
+      "test_point_fallback_reason": "RuntimeError: rule-only evaluation",
+      "requirement_rule_count": 3,
+      "test_point_count": 10
+    },
+    {
+      "case_id": "ACCEPT_ORDER_CREATE_001",
+      "expected_business_type": "order_create",
+      "actual_business_types": [
+        "order_create"
+      ],
+      "business_classification_correct": true,
+      "expected_rule_ids": [
+        "REQ_ORDER_001",
+        "REQ_ORDER_002",
+        "REQ_ORDER_003"
+      ],
+      "actual_rule_ids": [
+        "REQ_ORDER_001",
+        "REQ_ORDER_002",
+        "REQ_ORDER_003"
+      ],
+      "matched_rule_ids": [
+        "REQ_ORDER_001",
+        "REQ_ORDER_002",
+        "REQ_ORDER_003"
+      ],
+      "rule_recall_rate": 100.0,
+      "expected_categories": [
+        "data_quality",
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "resource_dependency",
+        "state_flow"
+      ],
+      "actual_categories": [
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "resource_dependency",
+        "state_flow"
+      ],
+      "matched_categories": [
+        "functional_behavior",
+        "input_parameter",
+        "reliability",
+        "resource_dependency",
+        "state_flow"
+      ],
+      "layer_coverage_rate": 83.33,
+      "rule_to_test_point_rate": 100.0,
+      "invalid_reference_ids": [],
+      "non_executable_test_points": 0,
+      "requirement_source": "rule",
+      "test_point_source": "rule",
+      "fallback_count": 2,
+      "requirement_fallback_reason": "RuntimeError: rule-only evaluation",
+      "test_point_fallback_reason": "RuntimeError: rule-only evaluation",
+      "requirement_rule_count": 3,
+      "test_point_count": 11
+    }
+  ],
+  "mode": "rule"
+}

@@ -30,6 +30,7 @@ class AgentState(TypedDict):
     retry_history: List[Dict]
     trace: List[Dict]
     metrics: Dict
+    enhancement_stop_reason: str
 
 
 def retrieve_node(state: AgentState) -> AgentState:
@@ -109,6 +110,18 @@ def coverage_node(state: AgentState) -> AgentState:
 
     print(f"当前覆盖率：{state['coverage_result']['coverage_rate']}%")
 
+    if state["retry_history"]:
+        latest_retry = state["retry_history"][-1]
+        if "coverage_after" not in latest_retry:
+            coverage_after = state["coverage_result"].get("coverage_rate", 0)
+            latest_retry["coverage_after"] = coverage_after
+
+            if (
+                latest_retry.get("added_cases")
+                and coverage_after <= latest_retry.get("coverage_before", 0)
+            ):
+                state["enhancement_stop_reason"] = "本轮已新增用例，但覆盖率没有提升，停止无效增强"
+
     state = add_trace(
         state,
         node_name="coverage",
@@ -138,11 +151,12 @@ def should_retry_or_continue(state: AgentState) -> str:
         coverage_rate < coverage_threshold
         and len(missing_dimensions) > 0
         and state["retry_count"] < state["max_retries"]
+        and not state.get("enhancement_stop_reason")
     ):
         print("覆盖率不足，进入自动补充测试用例节点")
         return "enhance_cases"
 
-    print("覆盖率满足要求或已达到最大重试次数，进入测试执行节点")
+    print("覆盖率满足要求、已达到最大重试次数或已触发无进展退出，进入测试执行节点")
     return "run_tests"
 
 
@@ -161,11 +175,17 @@ def enhance_cases_node(state: AgentState) -> AgentState:
     state["test_cases"] = enhanced_cases
     state["retry_count"] += 1
 
+    stop_reason = ""
+    if not added_cases:
+        stop_reason = "本轮未新增测试用例，停止无效增强"
+        state["enhancement_stop_reason"] = stop_reason
+
     state["retry_history"].append({
         "retry_round": state["retry_count"],
         "coverage_before": coverage_before,
         "missing_dimensions": missing_dimensions,
-        "added_cases": added_cases
+        "added_cases": added_cases,
+        "stop_reason": stop_reason
     })
 
     print(f"本次新增测试用例数：{len(added_cases)}")
@@ -182,7 +202,8 @@ def enhance_cases_node(state: AgentState) -> AgentState:
             "added_case_ids": [
                 item["added_case"].get("case_id")
                 for item in added_cases
-            ]
+            ],
+            "stop_reason": stop_reason
         }
     )
 
@@ -325,7 +346,8 @@ def run_agent(requirement: str) -> str:
         "max_retries": 2,
         "retry_history": [],
         "trace": [],
-        "metrics": {}
+        "metrics": {},
+        "enhancement_stop_reason": ""
     }
 
     final_state = app.invoke(initial_state)

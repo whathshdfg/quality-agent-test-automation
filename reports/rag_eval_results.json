@@ -1,0 +1,308 @@
+{
+  "total_questions": 20,
+  "answerable_questions": 10,
+  "topk_expected_source_hits": 10,
+  "unanswerable_questions": 10,
+  "correct_rejections": 0,
+  "citation_validator_checks": 20,
+  "citation_validator_passed": 20,
+  "details": [
+    {
+      "id": 1,
+      "type": "answerable",
+      "question": "创建订单接口在用户输入起点和终点后应返回什么关键字段？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 2,
+      "type": "answerable",
+      "question": "起点为空时订单创建应该返回什么错误码或消息？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 3,
+      "type": "answerable",
+      "question": "用户存在未完成订单时系统应如何处理重复下单？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 4,
+      "type": "answerable",
+      "question": "未接单订单被用户主动取消后订单状态应变成什么？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 5,
+      "type": "answerable",
+      "question": "订单创建后 3 分钟内没有司机接单时系统应执行什么动作？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 6,
+      "type": "answerable",
+      "question": "司机已接单后用户取消订单时必须记录什么信息？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 7,
+      "type": "answerable",
+      "question": "支付成功后订单状态应变为什么？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 8,
+      "type": "answerable",
+      "question": "重复支付时系统应该返回什么错误？",
+      "expected_source": "requirement.md",
+      "retrieved_sources": [
+        "requirement.md",
+        "bug_hitory.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 9,
+      "type": "answerable",
+      "question": "测试用例编写规范要求覆盖哪些类型的场景？",
+      "expected_source": "test_standard.md",
+      "retrieved_sources": [
+        "test_standard.md",
+        "bug_hitory.md",
+        "requirement.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 10,
+      "type": "answerable",
+      "question": "历史缺陷中订单取消后司机资源未释放的根因是什么？",
+      "expected_source": "bug_hitory.md",
+      "retrieved_sources": [
+        "bug_hitory.md",
+        "requirement.md",
+        "api_spec.md"
+      ],
+      "topk_contains_expected": true,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 11,
+      "type": "unanswerable",
+      "question": "优惠券满减规则如何计算最优折扣？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "bug_hitory.md",
+        "requirement.md",
+        "test_standard.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 12,
+      "type": "unanswerable",
+      "question": "司机实名认证审核需要哪些证件字段？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "bug_hitory.md",
+        "requirement.md",
+        "test_standard.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 13,
+      "type": "unanswerable",
+      "question": "发票开具接口支持哪些抬头类型？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "api_spec.md",
+        "requirement.md",
+        "bug_hitory.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 14,
+      "type": "unanswerable",
+      "question": "乘客会员等级积分如何累计？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "requirement.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 15,
+      "type": "unanswerable",
+      "question": "地图路线规划服务的供应商超时阈值是多少？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "bug_hitory.md",
+        "requirement.md",
+        "test_standard.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 16,
+      "type": "unanswerable",
+      "question": "客服工单升级 SLA 规则是什么？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "requirement.md",
+        "api_spec.md",
+        "bug_hitory.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 17,
+      "type": "unanswerable",
+      "question": "司机提现到银行卡的手续费规则是什么？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "bug_hitory.md",
+        "requirement.md",
+        "test_standard.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 18,
+      "type": "unanswerable",
+      "question": "企业用车预算审批流包含哪些节点？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "requirement.md",
+        "test_standard.md",
+        "bug_hitory.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 19,
+      "type": "unanswerable",
+      "question": "风控黑名单命中后是否需要二次人审？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "bug_hitory.md",
+        "requirement.md",
+        "test_standard.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    },
+    {
+      "id": 20,
+      "type": "unanswerable",
+      "question": "司机端热力图刷新频率是多少秒？",
+      "expected_source": null,
+      "retrieved_sources": [
+        "bug_hitory.md",
+        "requirement.md"
+      ],
+      "topk_contains_expected": null,
+      "rejected": false,
+      "citation_checked": true,
+      "citation_passed": true
+    }
+  ]
+}

@@ -30,7 +30,17 @@ def calculate_metrics(state: dict) -> dict:
         if c.get("generation_source") == "rule"
     ])
 
-    unknown_generated_cases = total_cases - llm_generated_cases - rule_generated_cases
+    auto_supplement_cases = len([
+        c for c in test_cases
+        if c.get("generation_source") == "auto_supplement"
+    ])
+
+    unknown_generated_cases = (
+        total_cases
+        - llm_generated_cases
+        - rule_generated_cases
+        - auto_supplement_cases
+    )
 
     added_cases_count = 0
     for retry in retry_history:
@@ -53,8 +63,10 @@ def calculate_metrics(state: dict) -> dict:
         "missing_dimensions": coverage_result.get("missing_dimensions", []),
         "retry_count": state.get("retry_count", 0),
         "added_cases_count": added_cases_count,
+        "enhancement_stop_reason": state.get("enhancement_stop_reason", ""),
         "llm_generated_cases": llm_generated_cases,
         "rule_generated_cases": rule_generated_cases,
+        "auto_supplement_cases": auto_supplement_cases,
         "unknown_generated_cases": unknown_generated_cases,
         "rag_docs_count": len(rag_context),
         "bug_count": len(bug_analysis),
@@ -92,8 +104,11 @@ def format_metrics_markdown(metrics: dict) -> str:
     text += f"- 测试覆盖率：{metrics['coverage_rate']}%\n"
     text += f"- Agent 自动补充次数：{metrics['retry_count']}\n"
     text += f"- 自动补充用例数：{metrics['added_cases_count']}\n"
+    if metrics.get("enhancement_stop_reason"):
+        text += f"- 自动补充退出原因：{metrics['enhancement_stop_reason']}\n"
     text += f"- 大模型生成用例数：{metrics['llm_generated_cases']}\n"
     text += f"- 规则兜底生成用例数：{metrics['rule_generated_cases']}\n"
+    text += f"- 自动补充生成用例数：{metrics['auto_supplement_cases']}\n"
     text += f"- RAG 检索文档数：{metrics['rag_docs_count']}\n"
     text += f"- 缺陷分析数量：{metrics['bug_count']}\n"
 

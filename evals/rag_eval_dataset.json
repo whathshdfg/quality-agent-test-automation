@@ -1,0 +1,122 @@
+[
+  {
+    "id": 1,
+    "question": "创建订单接口在用户输入起点和终点后应返回什么关键字段？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 2,
+    "question": "起点为空时订单创建应该返回什么错误码或消息？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 3,
+    "question": "用户存在未完成订单时系统应如何处理重复下单？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 4,
+    "question": "未接单订单被用户主动取消后订单状态应变成什么？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 5,
+    "question": "订单创建后 3 分钟内没有司机接单时系统应执行什么动作？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 6,
+    "question": "司机已接单后用户取消订单时必须记录什么信息？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 7,
+    "question": "支付成功后订单状态应变为什么？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 8,
+    "question": "重复支付时系统应该返回什么错误？",
+    "type": "answerable",
+    "expected_source": "requirement.md"
+  },
+  {
+    "id": 9,
+    "question": "测试用例编写规范要求覆盖哪些类型的场景？",
+    "type": "answerable",
+    "expected_source": "test_standard.md"
+  },
+  {
+    "id": 10,
+    "question": "历史缺陷中订单取消后司机资源未释放的根因是什么？",
+    "type": "answerable",
+    "expected_source": "bug_hitory.md"
+  },
+  {
+    "id": 11,
+    "question": "优惠券满减规则如何计算最优折扣？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 12,
+    "question": "司机实名认证审核需要哪些证件字段？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 13,
+    "question": "发票开具接口支持哪些抬头类型？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 14,
+    "question": "乘客会员等级积分如何累计？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 15,
+    "question": "地图路线规划服务的供应商超时阈值是多少？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 16,
+    "question": "客服工单升级 SLA 规则是什么？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 17,
+    "question": "司机提现到银行卡的手续费规则是什么？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 18,
+    "question": "企业用车预算审批流包含哪些节点？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 19,
+    "question": "风控黑名单命中后是否需要二次人审？",
+    "type": "unanswerable",
+    "expected_source": null
+  },
+  {
+    "id": 20,
+    "question": "司机端热力图刷新频率是多少秒？",
+    "type": "unanswerable",
+    "expected_source": null
+  }
+]

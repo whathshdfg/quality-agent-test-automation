@@ -69,6 +69,13 @@ def create_order(request: CreateOrderRequest):
             "order_id": None
         }
 
+    if request.start_location == request.end_location:
+        return {
+            "code": 400,
+            "message": "SAME_LOCATION",
+            "order_id": None
+        }
+
     for order in MOCK_DB["orders"].values():
         if (
             order["user_id"] == request.user_id
@@ -134,10 +141,8 @@ def cancel_order(request: CancelOrderRequest):
     order["order_status"] = "cancelled"
     order["cancel_reason"] = request.cancel_reason
 
-    # 注意：这里故意保留一个 Bug
-    # 正确逻辑应该是：如果订单绑定了 driver_id，取消订单后应释放司机资源。
-    # 但这里没有释放 driver_status，所以后面的 TC_CANCEL_004 会失败。
-    # 这正好用于演示 Agent 的缺陷发现能力。
+    if order.get("driver_id"):
+        MOCK_DB["drivers"][order["driver_id"]]["driver_status"] = "available"
 
     return {
         "code": 0,
@@ -190,6 +195,21 @@ def get_order(order_id: str):
         "code": 0,
         "message": "SUCCESS",
         "order": order
+    }
+
+
+@router.get("/orders/user/{user_id}")
+def list_user_orders(user_id: str):
+    orders = [
+        order
+        for order in MOCK_DB["orders"].values()
+        if order["user_id"] == user_id
+    ]
+
+    return {
+        "code": 0,
+        "message": "SUCCESS",
+        "orders": orders
     }
 
 

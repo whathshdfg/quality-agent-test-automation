@@ -33,12 +33,14 @@ function App() {
   const [report, setReport] = useState("");
   const [metrics, setMetrics] = useState(null);
   const [trace, setTrace] = useState(null);
+  const [coverageMatrix, setCoverageMatrix] = useState(null);
+  const [modelMode, setModelMode] = useState("api");
   const [activeTab, setActiveTab] = useState("report");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function fetchMetrics() {
-    const response = await fetch(`${API_BASE_URL}/agent/metrics`);
+    const response = await fetch(`${API_BASE_URL}/agent/v2/metrics`);
     const data = await response.json();
 
     if (data.status === "success") {
@@ -49,7 +51,7 @@ function App() {
   }
 
   async function fetchTrace() {
-    const response = await fetch(`${API_BASE_URL}/agent/trace`);
+    const response = await fetch(`${API_BASE_URL}/agent/v2/trace`);
     const data = await response.json();
 
     if (data.status === "success") {
@@ -63,7 +65,7 @@ function App() {
     setError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/agent/report`);
+      const response = await fetch(`${API_BASE_URL}/agent/v2/report`);
       const data = await response.json();
 
       if (data.status === "success") {
@@ -84,16 +86,18 @@ function App() {
     setReport("");
     setMetrics(null);
     setTrace(null);
+    setCoverageMatrix(null);
     setActiveTab("report");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/agent/run`, {
+      const response = await fetch(`${API_BASE_URL}/agent/v2/run`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           requirement,
+          model_mode: modelMode,
         }),
       });
 
@@ -108,9 +112,9 @@ function App() {
       }
 
       setReport(data.report);
-
-      await fetchMetrics();
-      await fetchTrace();
+      setMetrics(data.metrics);
+      setTrace(data.trace);
+      setCoverageMatrix(data.coverage_matrix);
     } catch (err) {
       setError(`运行 Agent 失败：${err.message}`);
     } finally {
@@ -136,7 +140,24 @@ function App() {
         <section className="panel input-panel">
           <div className="panel-title">
             <h2>业务需求输入</h2>
-            <span>POST /agent/run</span>
+            <span>POST /agent/v2/run</span>
+          </div>
+
+          <div className="mode-control" aria-label="模型运行模式">
+            <button
+              className={modelMode === "api" ? "mode-button active" : "mode-button"}
+              onClick={() => setModelMode("api")}
+              disabled={loading}
+            >
+              API 模型
+            </button>
+            <button
+              className={modelMode === "rule" ? "mode-button active" : "mode-button"}
+              onClick={() => setModelMode("rule")}
+              disabled={loading}
+            >
+              规则模式
+            </button>
           </div>
 
           <textarea
@@ -170,12 +191,14 @@ function App() {
           </div>
 
           <div className="metrics-grid">
-            <MetricCard label="测试用例数" value={metrics?.total_cases} />
+            <MetricCard label="测试用例数" value={metrics?.test_case_count} />
             <MetricCard label="通过率" value={metrics ? `${metrics.pass_rate}%` : "-"} />
-            <MetricCard label="覆盖率" value={metrics ? `${metrics.coverage_rate}%` : "-"} />
+            <MetricCard label="需求覆盖率" value={metrics ? `${metrics.requirement_coverage_rate}%` : "-"} />
+            <MetricCard label="参数覆盖率" value={metrics ? `${metrics.parameter_coverage_rate}%` : "-"} />
+            <MetricCard label="风险覆盖率" value={metrics ? `${metrics.risk_coverage_rate}%` : "-"} />
             <MetricCard label="失败用例数" value={metrics?.failed_cases} />
-            <MetricCard label="自动补充次数" value={metrics?.retry_count} />
-            <MetricCard label="缺陷数量" value={metrics?.bug_count} />
+            <MetricCard label="自动补充次数" value={metrics?.enhancement_count} />
+            <MetricCard label="剩余缺口" value={metrics?.coverage_gap_count} />
           </div>
 
           <div className="tabs">
@@ -190,6 +213,12 @@ function App() {
               onClick={() => setActiveTab("metrics")}
             >
               Metrics 指标
+            </button>
+            <button
+              className={activeTab === "coverage" ? "tab active" : "tab"}
+              onClick={() => setActiveTab("coverage")}
+            >
+              覆盖矩阵
             </button>
             <button
               className={activeTab === "trace" ? "tab active" : "tab"}
@@ -209,6 +238,8 @@ function App() {
             )}
 
             {activeTab === "metrics" && <JsonBlock data={metrics} />}
+
+            {activeTab === "coverage" && <JsonBlock data={coverageMatrix} />}
 
             {activeTab === "trace" && (
               traceList.length > 0 ? (

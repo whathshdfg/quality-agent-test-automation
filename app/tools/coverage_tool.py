@@ -9,12 +9,12 @@ def analyze_test_coverage(requirement: str, test_cases: list[dict]) -> dict:
 
     coverage_rules = {
         "正常场景": ["正常", "成功", "主动取消", "创建成功", "支付成功"],
-        "异常场景": ["异常", "失败", "为空", "错误", "超时", "未接单"],
-        "边界场景": ["边界", "3 分钟", "超过", "接近"],
+        "异常场景": ["异常", "失败", "为空", "错误", "不存在", "ORDER_NOT_FOUND", "PARAM_ERROR", "INVALID_AMOUNT"],
+        "边界场景": ["边界", "3 分钟", "超过", "接近", "超时", "最小有效金额", "起点终点相同", "SAME_LOCATION"],
         "重复操作": ["重复", "再次", "连续点击", "重复支付", "重复下单", "重复取消"],
-        "状态变更校验": ["状态", "cancelled", "paid", "waiting", "accepted", "unpaid"],
-        "资源释放校验": ["资源", "司机状态", "driver_status", "available", "assigned"],
-        "数据一致性校验": ["一致", "校验", "查询", "order_id", "payment_status", "订单列表"],
+        "状态变更校验": ["状态变更", "状态", "cancelled", "paid", "waiting", "accepted", "unpaid"],
+        "资源释放校验": ["资源", "资源释放", "资源占用", "司机状态", "driver_status", "available", "assigned"],
+        "数据一致性校验": ["一致", "数据一致性", "校验", "查询", "order_id", "payment_status", "订单列表"],
     }
 
     all_case_text = ""

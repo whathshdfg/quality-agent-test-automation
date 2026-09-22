@@ -104,8 +104,12 @@ def generate_report(
 
             report += f"### 第 {retry.get('retry_round', '')} 次补充\n\n"
             report += f"- 补充前覆盖率: {retry.get('coverage_before', 0)}%\n"
+            if "coverage_after" in retry:
+                report += f"- 补充后覆盖率: {retry.get('coverage_after', 0)}%\n"
             report += f"- 缺失维度: {missing_text}\n"
             report += f"- 新增用例数: {len(retry.get('added_cases', []))}\n\n"
+            if retry.get("stop_reason"):
+                report += f"- 退出原因: {retry.get('stop_reason')}\n\n"
 
             for item in retry.get("added_cases", []):
                 case = item.get("added_case", {})

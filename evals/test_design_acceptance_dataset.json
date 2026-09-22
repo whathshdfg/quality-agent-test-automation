@@ -1,0 +1,355 @@
+{
+  "dataset_version": "1.0.0",
+  "description": "需求拆解与分层测试设计的黄金验收数据集，不依赖具体模型措辞。",
+  "cases": [
+    {
+      "case_id": "ACCEPT_CANCEL_001",
+      "requirement": "用户可以取消未接单订单，取消后订单状态变为 cancelled。订单创建 3 分钟内没有司机接单时系统自动取消。如果司机已经接单，用户取消时必须填写原因，并释放已占用的司机资源。",
+      "business_type": "order_cancel",
+      "requirement_rules": [
+        {
+          "rule_id": "REQ_CANCEL_001",
+          "text": "用户取消 waiting 订单后，订单状态变为 cancelled",
+          "business_type": "order_cancel",
+          "actor": "user",
+          "trigger": "用户主动取消",
+          "preconditions": ["order_status=waiting"],
+          "action": "cancel_order",
+          "expected_outcomes": ["order_status=cancelled"],
+          "parameters": [
+            {
+              "name": "order_id",
+              "data_type": "string",
+              "required": true,
+              "invalid_values": ["order_not_exists"],
+              "constraints": ["订单必须存在"]
+            }
+          ],
+          "risks": ["state_transition", "idempotency"]
+        },
+        {
+          "rule_id": "REQ_CANCEL_002",
+          "text": "waiting 订单达到 3 分钟未接单条件后自动取消",
+          "business_type": "order_cancel",
+          "actor": "system",
+          "trigger": "timeout_no_driver",
+          "preconditions": ["order_status=waiting", "elapsed_minutes>=3"],
+          "action": "timeout_cancel_order",
+          "expected_outcomes": ["order_status=cancelled", "cancel_reason=timeout_no_driver"],
+          "risks": ["boundary", "state_transition"]
+        },
+        {
+          "rule_id": "REQ_CANCEL_003",
+          "text": "accepted 订单取消时必须提供取消原因",
+          "business_type": "order_cancel",
+          "actor": "user",
+          "trigger": "用户取消已接单订单",
+          "preconditions": ["order_status=accepted"],
+          "action": "cancel_order",
+          "expected_outcomes": ["cancel_reason 被记录"],
+          "parameters": [
+            {
+              "name": "cancel_reason",
+              "data_type": "string",
+              "required": true,
+              "invalid_values": [null, ""],
+              "constraints": ["accepted 订单不能为空"]
+            }
+          ],
+          "risks": ["required_parameter", "data_consistency"]
+        },
+        {
+          "rule_id": "REQ_CANCEL_004",
+          "text": "已分配司机的订单取消后释放司机资源",
+          "business_type": "order_cancel",
+          "actor": "system",
+          "trigger": "accepted 订单取消成功",
+          "preconditions": ["driver_status=assigned"],
+          "action": "release_driver",
+          "expected_outcomes": ["driver_status=available"],
+          "risks": ["resource_release", "data_consistency"]
+        }
+      ],
+      "expected_test_points": [
+        {
+          "test_point_id": "TP_CANCEL_FUNCTION_001",
+          "requirement_ids": ["REQ_CANCEL_001"],
+          "business_type": "order_cancel",
+          "level_1": "functional_behavior",
+          "level_2": "正常取消",
+          "description": "用户成功取消 waiting 订单",
+          "risk_level": "medium",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_CANCEL_INPUT_001",
+          "requirement_ids": ["REQ_CANCEL_003"],
+          "business_type": "order_cancel",
+          "level_1": "input_parameter",
+          "level_2": "必填参数为空",
+          "description": "accepted 订单取消原因为空时拒绝取消",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_CANCEL_STATE_001",
+          "requirement_ids": ["REQ_CANCEL_001", "REQ_CANCEL_002"],
+          "business_type": "order_cancel",
+          "level_1": "state_flow",
+          "level_2": "合法状态迁移",
+          "description": "waiting 状态正确迁移为 cancelled",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_CANCEL_RESOURCE_001",
+          "requirement_ids": ["REQ_CANCEL_004"],
+          "business_type": "order_cancel",
+          "level_1": "resource_dependency",
+          "level_2": "资源释放",
+          "description": "取消 accepted 订单后司机恢复 available",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_CANCEL_DATA_001",
+          "requirement_ids": ["REQ_CANCEL_003", "REQ_CANCEL_004"],
+          "business_type": "order_cancel",
+          "level_1": "data_quality",
+          "level_2": "详情与关联资源一致性",
+          "description": "取消原因、订单状态和司机状态保持一致",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_CANCEL_RELIABILITY_001",
+          "requirement_ids": ["REQ_CANCEL_001"],
+          "business_type": "order_cancel",
+          "level_1": "reliability",
+          "level_2": "幂等性",
+          "description": "重复取消不会产生第二次状态变化",
+          "risk_level": "high",
+          "executable": true
+        }
+      ]
+    },
+    {
+      "case_id": "ACCEPT_PAYMENT_001",
+      "requirement": "用户使用有效金额支付未支付订单，成功后订单和支付状态变为 paid。金额必须大于 0，支付失败时保持 unpaid，已支付订单不能重复支付。",
+      "business_type": "payment",
+      "requirement_rules": [
+        {
+          "rule_id": "REQ_PAY_001",
+          "text": "有效金额支付成功后订单和支付状态变为 paid",
+          "business_type": "payment",
+          "actor": "user",
+          "trigger": "提交支付",
+          "preconditions": ["payment_status=unpaid"],
+          "action": "pay_order",
+          "expected_outcomes": ["payment_status=paid", "order_status=paid"],
+          "parameters": [
+            {
+              "name": "amount",
+              "data_type": "number",
+              "required": true,
+              "valid_values": [0.01, 30.0],
+              "invalid_values": [0, -1],
+              "boundary_values": [0, 0.01],
+              "constraints": ["amount>0"]
+            }
+          ],
+          "risks": ["state_transition", "amount_boundary"]
+        },
+        {
+          "rule_id": "REQ_PAY_002",
+          "text": "支付失败时订单保持 unpaid",
+          "business_type": "payment",
+          "actor": "system",
+          "trigger": "支付校验失败",
+          "preconditions": ["payment_status=unpaid"],
+          "action": "reject_payment",
+          "expected_outcomes": ["payment_status=unpaid"],
+          "risks": ["failure_rollback", "data_consistency"]
+        },
+        {
+          "rule_id": "REQ_PAY_003",
+          "text": "已支付订单再次支付时返回 REPEAT_PAYMENT",
+          "business_type": "payment",
+          "actor": "user",
+          "trigger": "重复提交支付",
+          "preconditions": ["payment_status=paid"],
+          "action": "pay_order",
+          "expected_outcomes": ["message=REPEAT_PAYMENT", "不重复扣款"],
+          "risks": ["idempotency", "duplicate_charge"]
+        }
+      ],
+      "expected_test_points": [
+        {
+          "test_point_id": "TP_PAY_FUNCTION_001",
+          "requirement_ids": ["REQ_PAY_001"],
+          "business_type": "payment",
+          "level_1": "functional_behavior",
+          "level_2": "正常支付",
+          "description": "有效金额支付成功",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_PAY_INPUT_001",
+          "requirement_ids": ["REQ_PAY_001"],
+          "business_type": "payment",
+          "level_1": "input_parameter",
+          "level_2": "金额边界",
+          "description": "金额 0、负数和最小有效值 0.01",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_PAY_STATE_001",
+          "requirement_ids": ["REQ_PAY_001", "REQ_PAY_002"],
+          "business_type": "payment",
+          "level_1": "state_flow",
+          "level_2": "成功与失败状态迁移",
+          "description": "成功变 paid，失败保持 unpaid",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_PAY_DATA_001",
+          "requirement_ids": ["REQ_PAY_001", "REQ_PAY_002"],
+          "business_type": "payment",
+          "level_1": "data_quality",
+          "level_2": "订单与支付状态一致性",
+          "description": "订单详情和列表中的支付状态一致",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_PAY_RELIABILITY_001",
+          "requirement_ids": ["REQ_PAY_003"],
+          "business_type": "payment",
+          "level_1": "reliability",
+          "level_2": "支付幂等性",
+          "description": "重复支付被拦截且不会重复扣款",
+          "risk_level": "high",
+          "executable": true
+        }
+      ]
+    },
+    {
+      "case_id": "ACCEPT_ORDER_CREATE_001",
+      "requirement": "用户填写有效起点和终点后创建订单，返回 order_id，初始状态为 waiting。起终点不能为空且不能相同。同一用户存在未完成订单时禁止重复下单。分配司机后订单为 accepted，司机状态为 assigned。",
+      "business_type": "order_create",
+      "requirement_rules": [
+        {
+          "rule_id": "REQ_ORDER_001",
+          "text": "有效起点和终点创建订单后返回 order_id，状态为 waiting",
+          "business_type": "order_create",
+          "actor": "user",
+          "trigger": "提交创建订单请求",
+          "preconditions": ["用户不存在未完成订单"],
+          "action": "create_order",
+          "expected_outcomes": ["返回 order_id", "order_status=waiting"],
+          "parameters": [
+            {
+              "name": "start_location",
+              "data_type": "string",
+              "required": true,
+              "invalid_values": [null, ""],
+              "constraints": ["不能为空", "不能与 end_location 相同"]
+            },
+            {
+              "name": "end_location",
+              "data_type": "string",
+              "required": true,
+              "invalid_values": [null, ""],
+              "constraints": ["不能为空", "不能与 start_location 相同"]
+            }
+          ],
+          "risks": ["required_parameter", "parameter_combination"]
+        },
+        {
+          "rule_id": "REQ_ORDER_002",
+          "text": "用户存在未完成订单时返回 DUPLICATE_ORDER",
+          "business_type": "order_create",
+          "actor": "user",
+          "trigger": "重复创建订单",
+          "preconditions": ["存在 waiting、accepted、running 或 unpaid 订单"],
+          "action": "create_order",
+          "expected_outcomes": ["message=DUPLICATE_ORDER", "不创建新订单"],
+          "risks": ["idempotency", "duplicate_data"]
+        },
+        {
+          "rule_id": "REQ_ORDER_003",
+          "text": "创建订单并分配司机后订单为 accepted，司机为 assigned",
+          "business_type": "order_create",
+          "actor": "system",
+          "trigger": "assign_driver=true",
+          "preconditions": ["driver_status=available"],
+          "action": "create_order_and_assign_driver",
+          "expected_outcomes": ["order_status=accepted", "driver_status=assigned"],
+          "risks": ["resource_allocation", "state_transition"]
+        }
+      ],
+      "expected_test_points": [
+        {
+          "test_point_id": "TP_ORDER_FUNCTION_001",
+          "requirement_ids": ["REQ_ORDER_001"],
+          "business_type": "order_create",
+          "level_1": "functional_behavior",
+          "level_2": "正常创建",
+          "description": "有效起终点成功创建 waiting 订单",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_ORDER_INPUT_001",
+          "requirement_ids": ["REQ_ORDER_001"],
+          "business_type": "order_create",
+          "level_1": "input_parameter",
+          "level_2": "必填与参数组合",
+          "description": "验证起终点为空以及起终点相同",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_ORDER_STATE_001",
+          "requirement_ids": ["REQ_ORDER_001", "REQ_ORDER_003"],
+          "business_type": "order_create",
+          "level_1": "state_flow",
+          "level_2": "初始状态与分配状态",
+          "description": "未分配司机为 waiting，分配司机后为 accepted",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_ORDER_RESOURCE_001",
+          "requirement_ids": ["REQ_ORDER_003"],
+          "business_type": "order_create",
+          "level_1": "resource_dependency",
+          "level_2": "司机资源分配",
+          "description": "分配司机后 driver_status 变为 assigned",
+          "risk_level": "high",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_ORDER_DATA_001",
+          "requirement_ids": ["REQ_ORDER_001"],
+          "business_type": "order_create",
+          "level_1": "data_quality",
+          "level_2": "详情与列表一致性",
+          "description": "详情与列表中的订单编号、状态和起终点一致",
+          "executable": true
+        },
+        {
+          "test_point_id": "TP_ORDER_RELIABILITY_001",
+          "requirement_ids": ["REQ_ORDER_002"],
+          "business_type": "order_create",
+          "level_1": "reliability",
+          "level_2": "重复下单保护",
+          "description": "存在未完成订单时不创建第二个订单",
+          "risk_level": "high",
+          "executable": true
+        }
+      ]
+    }
+  ]
+}
