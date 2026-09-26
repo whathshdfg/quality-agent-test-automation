@@ -1,9 +1,10 @@
 from fastapi.testclient import TestClient
 
-import app.api_server as api_server
+from app.main import app
+import app.api.routes.agent as agent_routes
 
 
-client = TestClient(api_server.app)
+client = TestClient(app)
 
 
 def fake_state():
@@ -33,7 +34,7 @@ def test_v2_run_endpoint_returns_structured_result(monkeypatch):
         })
         return fake_state()
 
-    monkeypatch.setattr(api_server, "run_agent_v2", fake_run)
+    monkeypatch.setattr(agent_routes, "run_agent_v2", fake_run)
     response = client.post(
         "/agent/v2/run",
         json={"requirement": "测试重复支付", "model_mode": "rule"},
@@ -73,7 +74,21 @@ def test_v2_output_endpoints_read_saved_files(tmp_path, monkeypatch):
     (output_dir / "v2_test_report.md").write_text(
         "# saved report", encoding="utf-8"
     )
-    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(
+        agent_routes,
+        "METRICS_FILE",
+        output_dir / "v2_metrics_report.json",
+    )
+    monkeypatch.setattr(
+        agent_routes,
+        "TRACE_FILE",
+        output_dir / "v2_execution_trace.json",
+    )
+    monkeypatch.setattr(
+        agent_routes,
+        "REPORT_FILE",
+        output_dir / "v2_test_report.md",
+    )
 
     metrics = client.get("/agent/v2/metrics").json()
     trace = client.get("/agent/v2/trace").json()

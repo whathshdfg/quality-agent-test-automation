@@ -38,5 +38,11 @@ Thumbs.db
 # Local IDE, scratch workspaces and generated delivery archives
 .idea/
 .agents/
+
 PythonProject/
 deliverables/
+
+# Runtime databases
+*.db
+*.sqlite
+*.sqlite3

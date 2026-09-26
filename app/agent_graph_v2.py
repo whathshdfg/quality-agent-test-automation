@@ -26,6 +26,7 @@ from app.tools.report_v2 import (
 )
 from app.tools.log_analysis_v2 import analyze_v2_failures
 from app.models.test_design import TestCaseSpec
+from app.db.run_repository import RunRepository
 
 
 ModelMode = Literal["api", "rule"]
@@ -384,14 +385,41 @@ def run_agent_v2(
     operation_runner=None,
     persist_outputs: bool = True,
     run_id: str | None = None,
+    persist_history: bool | None = None,
+    repository: RunRepository | None = None,
 ) -> AgentV2State:
     state = initial_v2_state(requirement, model_mode=model_mode, run_id=run_id)
     state["persist_outputs"] = persist_outputs
+    should_persist_history = persist_outputs if persist_history is None else persist_history
+    run_repository = repository
+    if should_persist_history:
+        run_repository = run_repository or RunRepository()
+        run_repository.create_run(
+            requirement=state["requirement"],
+            run_id=state["run_id"],
+        )
     graph = build_agent_graph_v2(
         operation_runner=operation_runner,
         checkpointer=V2_CHECKPOINTER,
     )
-    return graph.invoke(
-        state,
-        config={"configurable": {"thread_id": state["run_id"]}},
-    )
+    try:
+        final_state = graph.invoke(
+            state,
+            config={"configurable": {"thread_id": state["run_id"]}},
+        )
+    except Exception as exc:
+        if should_persist_history:
+            assert run_repository is not None
+            run_repository.fail_run(state["run_id"], str(exc))
+        raise
+
+    if should_persist_history:
+        assert run_repository is not None
+        run_repository.complete_run(
+            run_id=final_state["run_id"],
+            metrics=final_state["metrics"],
+            trace=final_state["trace"],
+            report=final_state["report"],
+            rag_docs=len(final_state.get("rag_context", [])),
+        )
+    return final_state

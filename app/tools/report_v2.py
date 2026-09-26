@@ -1,10 +1,8 @@
 """Reporting and metrics for the structured V2 Agent workflow."""
 
 import json
-from pathlib import Path
 
-
-OUTPUT_DIR = Path("app/outputs")
+from app.core.config import OUTPUT_DIR
 
 
 def calculate_v2_metrics(state: dict) -> dict:

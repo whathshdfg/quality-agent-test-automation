@@ -1,16 +1,31 @@
-from app.agent_graph import run_agent
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.api.routes.agent import router as agent_router
+from app.api.routes.runs import router as runs_router
+from app.mock_business_api import router as mock_router
 
 
-if __name__ == "__main__":
-    requirement = """
-    用户主动取消未接单订单后，订单状态变为 cancelled。
-    如果订单创建后 3 分钟内没有司机接单，系统自动取消订单。
-    如果司机已接单，用户取消订单时必须记录取消原因。
-    """
+app = FastAPI()
 
-    report = run_agent(requirement)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    with open("app/outputs/test_report.md", "w", encoding="utf-8") as f:
-        f.write(report)
+app.include_router(mock_router)
+app.include_router(agent_router)
+app.include_router(runs_router)
 
-    print("测试报告已生成：app/outputs/test_report.md")
+
+@app.get("/")
+def home():
+    return {
+        "message": "Quality Agent API is running.",
+    }

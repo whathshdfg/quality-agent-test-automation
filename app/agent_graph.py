@@ -331,10 +331,8 @@ def build_graph():
     return graph.compile()
 
 
-def run_agent(requirement: str) -> str:
-    app = build_graph()
-
-    initial_state = {
+def initial_state(requirement: str) -> AgentState:
+    return {
         "requirement": requirement,
         "rag_context": [],
         "test_cases": [],
@@ -350,6 +348,13 @@ def run_agent(requirement: str) -> str:
         "enhancement_stop_reason": ""
     }
 
-    final_state = app.invoke(initial_state)
 
+def run_agent_state(requirement: str) -> AgentState:
+    app = build_graph()
+    final_state = app.invoke(initial_state(requirement))
+    return final_state
+
+
+def run_agent(requirement: str) -> str:
+    final_state = run_agent_state(requirement)
     return final_state["report"]
