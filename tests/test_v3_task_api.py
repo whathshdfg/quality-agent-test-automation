@@ -1,30 +1,51 @@
 import pytest
 from fastapi.testclient import TestClient
-
 from app.main import app
-from app.v3.api.dependencies import get_task_repository
+from app.v3.api.dependencies import (
+    get_task_executor,
+    get_task_repository,
+)
 from app.v3.persistence.task_repository import TaskRepository
 from app.v3.schemas.task import TaskStatus
 
+class RecordingTaskExecutor:
+    def __init__(self):
+        self.submitted_task_ids = []
 
+    def submit(
+        self,
+        task_id,
+        repository,
+    ):
+        self.submitted_task_ids.append(task_id)
 @pytest.fixture
 def repository(tmp_path):
     return TaskRepository(
         tmp_path / "quality_agent_v3_test.db"
     )
-
+@pytest.fixture
+def task_executor():
+    return RecordingTaskExecutor()
 
 @pytest.fixture
-def client(repository):
+def client(
+    repository,
+    task_executor,
+):
     app.dependency_overrides[
         get_task_repository
     ] = lambda: repository
-
+    app.dependency_overrides[
+        get_task_executor
+    ] = lambda: task_executor
     with TestClient(app) as test_client:
         yield test_client
-
     app.dependency_overrides.pop(
         get_task_repository,
+        None,
+    )
+    app.dependency_overrides.pop(
+        get_task_executor,
         None,
     )
 
@@ -54,6 +75,7 @@ def test_repository_persists_created_task(tmp_path):
 def test_create_task_endpoint_returns_accepted(
     client,
     repository,
+    task_executor,
 ):
     response = client.post(
         "/api/v3/tasks",
@@ -82,6 +104,36 @@ def test_create_task_endpoint_returns_accepted(
     assert stored_task is not None
     assert stored_task.requirement == "测试重复支付"
     assert stored_task.status == TaskStatus.QUEUED
+
+    assert task_executor.submitted_task_ids == [
+        task_id
+    ]
+
+def test_get_task_endpoint_returns_persisted_task(
+    client,
+    repository,
+):
+    created = repository.create_task(
+        requirement="测试订单取消",
+        model_mode="api",
+    )
+
+    response = client.get(
+        f"/api/v3/tasks/{created.task_id}"
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["task_id"] == created.task_id
+    assert data["requirement"] == "测试订单取消"
+    assert data["model_mode"] == "api"
+    assert data["status"] == "queued"
+    assert data["current_node"] is None
+    assert data["progress"] == 0
+    assert data["result"] is None
+    assert data["error_message"] is None
 
 
 def test_get_task_endpoint_returns_persisted_task(
