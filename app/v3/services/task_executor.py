@@ -6,10 +6,11 @@ from typing import Any
 
 from fastapi.encoders import jsonable_encoder
 
-from app.agent_graph_v2 import run_agent_v2
 from app.v3.core.config import settings
 from app.v3.persistence.task_repository import TaskRepository
+from app.v3.schemas.event import TaskEventType
 from app.v3.schemas.task import TaskSnapshot
+from app.v3.services.workflow_runner import run_v3_workflow
 
 
 Workflow = Callable[..., dict[str, Any]]
@@ -19,7 +20,7 @@ class TaskExecutor:
     def __init__(
         self,
         max_workers: int | None = None,
-        workflow: Workflow = run_agent_v2,
+        workflow: Workflow = run_v3_workflow,
     ):
         self._workflow = workflow
         self._pool = ThreadPoolExecutor(
@@ -49,12 +50,25 @@ class TaskExecutor:
         try:
             task = repository.mark_running(task_id)
 
+            def persist_node_event(
+                event_type: TaskEventType,
+                node_name: str,
+                payload: dict[str, Any],
+            ) -> None:
+                repository.append_event(
+                    task_id=task_id,
+                    event_type=event_type,
+                    node_name=node_name,
+                    payload=payload,
+                )
+
             final_state = self._workflow(
                 task.requirement,
                 model_mode=task.model_mode,
                 persist_outputs=False,
                 persist_history=False,
                 run_id=task.task_id,
+                node_event_sink=persist_node_event,
             )
 
             result = jsonable_encoder(

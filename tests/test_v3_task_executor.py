@@ -1,9 +1,12 @@
 from app.v3.persistence.task_repository import TaskRepository
+from app.v3.schemas.event import TaskEventType
 from app.v3.schemas.task import TaskStatus
 from app.v3.services.task_executor import TaskExecutor
 
 
-def test_executor_completes_task(tmp_path):
+def test_executor_completes_task_and_persists_node_events(
+    tmp_path,
+):
     repository = TaskRepository(
         tmp_path / "executor_success.db"
     )
@@ -18,8 +21,27 @@ def test_executor_completes_task(tmp_path):
         requirement,
         **kwargs,
     ):
+        node_event_sink = kwargs.pop(
+            "node_event_sink"
+        )
+
         captured["requirement"] = requirement
         captured.update(kwargs)
+
+        node_event_sink(
+            TaskEventType.NODE_STARTED,
+            "retrieve",
+            {
+                "task_run_id": "node_run_001",
+            },
+        )
+        node_event_sink(
+            TaskEventType.NODE_COMPLETED,
+            "retrieve",
+            {
+                "task_run_id": "node_run_001",
+            },
+        )
 
         return {
             "run_id": kwargs["run_id"],
@@ -54,7 +76,10 @@ def test_executor_completes_task(tmp_path):
 
     assert completed.result is not None
     assert completed.result["report"] == "# 测试报告"
-    assert completed.result["metrics"]["passed_cases"] == 3
+    assert (
+        completed.result["metrics"]["passed_cases"]
+        == 3
+    )
 
     assert captured == {
         "requirement": "测试重复支付",
@@ -69,6 +94,31 @@ def test_executor_completes_task(tmp_path):
     assert stored is not None
     assert stored.status == TaskStatus.COMPLETED
     assert stored.result == completed.result
+
+    events = repository.list_events(
+        task_id=task.task_id,
+    )
+
+    assert [
+        event.event_type
+        for event in events
+    ] == [
+        TaskEventType.TASK_QUEUED,
+        TaskEventType.TASK_STARTED,
+        TaskEventType.NODE_STARTED,
+        TaskEventType.NODE_COMPLETED,
+        TaskEventType.TASK_COMPLETED,
+    ]
+
+    assert events[2].node_name == "retrieve"
+    assert events[2].payload == {
+        "task_run_id": "node_run_001",
+    }
+
+    assert events[3].node_name == "retrieve"
+    assert events[3].payload == {
+        "task_run_id": "node_run_001",
+    }
 
 
 def test_executor_marks_task_failed(tmp_path):
@@ -114,3 +164,16 @@ def test_executor_marks_task_failed(tmp_path):
     assert stored.error_message == (
         "RuntimeError: workflow exploded"
     )
+
+    events = repository.list_events(
+        task_id=task.task_id,
+    )
+
+    assert [
+        event.event_type
+        for event in events
+    ] == [
+        TaskEventType.TASK_QUEUED,
+        TaskEventType.TASK_STARTED,
+        TaskEventType.TASK_FAILED,
+    ]
