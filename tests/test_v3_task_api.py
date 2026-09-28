@@ -98,7 +98,9 @@ def test_create_task_endpoint_returns_accepted(
     assert data["events_url"] == (
         f"/api/v3/tasks/{task_id}/events"
     )
-
+    assert data["stream_url"] == (
+        f"/api/v3/tasks/{task_id}/events/stream"
+    )
     stored_task = repository.get_task(task_id)
 
     assert stored_task is not None

@@ -37,6 +37,7 @@ class TaskAcceptedResponse(BaseModel):
     status: TaskStatus
     status_url: str
     events_url: str
+    stream_url: str
 
 
 class TaskSnapshot(BaseModel):

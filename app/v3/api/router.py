@@ -1,14 +1,20 @@
 from fastapi import (
     APIRouter,
     Depends,
+    Header,
     HTTPException,
     Query,
+    Request,
     status,
 )
+from fastapi.responses import StreamingResponse
 from app.v3.schemas.event import TaskEventListResponse
 from app.v3.api.dependencies import (
     get_task_executor,
     get_task_repository,
+)
+from app.v3.services.event_stream import (
+    stream_task_events,
 )
 from app.v3.services.task_executor import TaskExecutor
 from app.v3.core.config import settings
@@ -72,6 +78,10 @@ def create_task(
         events_url=(
             f"{settings.api_prefix}/tasks/"
             f"{task.task_id}/events"
+        ),
+        stream_url=(
+            f"{settings.api_prefix}/tasks/"
+            f"{task.task_id}/events/stream"
         ),
     )
 
@@ -137,4 +147,76 @@ def get_task_events(
     return TaskEventListResponse(
         events=events,
         next_after_id=next_after_id,
+    )
+@router.get(
+    "/tasks/{task_id}/events/stream",
+)
+async def stream_task_events_endpoint(
+    task_id: str,
+    request: Request,
+    after_id: int = Query(
+        default=0,
+        ge=0,
+    ),
+    last_event_id: str | None = Header(
+        default=None,
+        alias="Last-Event-ID",
+    ),
+    repository: TaskRepository = Depends(
+        get_task_repository
+    ),
+):
+    task = repository.get_task(task_id)
+
+    if task is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"任务不存在：{task_id}",
+        )
+
+    cursor = after_id
+
+    if last_event_id is not None:
+        try:
+            parsed_last_event_id = int(
+                last_event_id
+            )
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="Last-Event-ID 必须是整数",
+            ) from exc
+
+        if parsed_last_event_id < 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Last-Event-ID 不能小于 0",
+            )
+
+        cursor = max(
+            cursor,
+            parsed_last_event_id,
+        )
+
+    event_generator = stream_task_events(
+        request=request,
+        repository=repository,
+        task_id=task_id,
+        after_id=cursor,
+        poll_interval=(
+            settings.sse_poll_interval_seconds
+        ),
+        heartbeat_interval=(
+            settings.sse_heartbeat_seconds
+        ),
+    )
+
+    return StreamingResponse(
+        event_generator,
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
     )
