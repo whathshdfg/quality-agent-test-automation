@@ -1,5 +1,5 @@
 import { NavLink, Route, Routes, useNavigate, useParams } from 'react-router-dom';
-import { BarChart3, BookOpen, FilePlus2, FlaskConical, History, Info, LayoutDashboard, Menu, Plus, Trash2 } from 'lucide-react';
+import { BarChart3, BookOpen, Bot, FilePlus2, FlaskConical, History, Info, LayoutDashboard, Menu, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { QualityTask, TaskDraft, TestCase } from './types';
 import { businessTypes, examples, riskTagOptions } from './data/examples';
@@ -8,6 +8,7 @@ import { exportJson, exportMarkdown } from './utils/exporters';
 import { supplementAllGaps, supplementForGap } from './features/supplement';
 import { buildCaseFromPoint } from './features/caseGenerator';
 import { makeId } from './utils/id';
+import { StudioPage } from './studio/StudioPage';
 
 function App() {
   const taskApi = useTasks();
@@ -17,7 +18,8 @@ function App() {
       <aside className={`sidebar ${navOpen ? 'open' : ''}`}>
         <div className="brand"><FlaskConical size={26} /><div><strong>Quality Agent Studio</strong><span>需求驱动的智能测试工作台</span></div></div>
         <nav>
-          <NavLink to="/"><LayoutDashboard size={18} />工作台</NavLink>
+          <NavLink to="/" end><Bot size={18} />应用生成</NavLink>
+          <NavLink to="/quality"><LayoutDashboard size={18} />质量工作台</NavLink>
           <NavLink to="/history"><History size={18} />历史任务</NavLink>
           <NavLink to="/examples"><BookOpen size={18} />示例需求</NavLink>
           <NavLink to="/about"><Info size={18} />产品说明</NavLink>
@@ -27,7 +29,8 @@ function App() {
       <main className="main">
         <button className="mobile-menu" onClick={() => setNavOpen(!navOpen)} aria-label="切换导航"><Menu size={18} /></button>
         <Routes>
-          <Route path="/" element={<Dashboard {...taskApi} />} />
+          <Route path="/" element={<StudioPage />} />
+          <Route path="/quality" element={<Dashboard {...taskApi} />} />
           <Route path="/new" element={<NewTask addTask={taskApi.addTask} />} />
           <Route path="/history" element={<HistoryPage tasks={taskApi.tasks} deleteTask={taskApi.deleteTask} />} />
           <Route path="/examples" element={<ExamplesPage addTask={taskApi.addTask} />} />
@@ -163,7 +166,7 @@ function TaskDetail({ tasks, updateTask, deleteTask, autosave }: { tasks: Qualit
   const [priority, setPriority] = useState('全部');
   const [dimension, setDimension] = useState('全部');
   const [toast, setToast] = useState('');
-  if (!task) return <><PageHeader title="任务不存在" desc="没有在当前浏览器中找到对应任务。" action={<button onClick={() => navigate('/')}>返回工作台</button>} /></>;
+  if (!task) return <><PageHeader title="任务不存在" desc="没有在当前浏览器中找到对应任务。" action={<button onClick={() => navigate('/quality')}>返回工作台</button>} /></>;
 
   const save = (next: QualityTask, text = '已保存') => { updateTask(next); setToast(text); window.setTimeout(() => setToast(''), 2200); };
   const addManual = () => {
@@ -176,7 +179,7 @@ function TaskDetail({ tasks, updateTask, deleteTask, autosave }: { tasks: Qualit
   const dimensions = ['全部', ...new Set(task.testCases.map((item) => item.dimension))];
   return (
     <>
-      <PageHeader title={task.name} desc={`${task.businessType} · 综合覆盖率 ${task.coverage.overall}% · ${autosave}`} action={<div className="actions"><button className="secondary" onClick={() => navigate('/')}>返回工作台</button><button onClick={() => exportMarkdown(task)}>导出 Markdown</button><button onClick={() => exportJson(task)}>导出 JSON</button><button className="danger" onClick={() => { if (window.confirm('确认删除该任务？')) { deleteTask(task.id); navigate('/'); } }}>删除任务</button></div>} />
+      <PageHeader title={task.name} desc={`${task.businessType} · 综合覆盖率 ${task.coverage.overall}% · ${autosave}`} action={<div className="actions"><button className="secondary" onClick={() => navigate('/quality')}>返回工作台</button><button onClick={() => exportMarkdown(task)}>导出 Markdown</button><button onClick={() => exportJson(task)}>导出 JSON</button><button className="danger" onClick={() => { if (window.confirm('确认删除该任务？')) { deleteTask(task.id); navigate('/quality'); } }}>删除任务</button></div>} />
       {toast && <div className="toast">{toast}</div>}
       <section className="detail-summary"><Metric icon={<BarChart3 />} label="规则覆盖" value={`${task.coverage.ruleCoverage.rate}%`} /><Metric icon={<BarChart3 />} label="功能流程" value={`${task.coverage.functionalCoverage.rate}%`} /><Metric icon={<BarChart3 />} label="参数覆盖" value={`${task.coverage.parameterCoverage.rate}%`} /><Metric icon={<BarChart3 />} label="风险覆盖" value={`${task.coverage.riskCoverage.rate}%`} /></section>
       <div className="tabs">{[['rules', '需求规则'], ['points', '测试点'], ['cases', '测试用例'], ['coverage', '覆盖分析']].map(([key, label]) => <button className={tab === key ? 'active' : ''} onClick={() => setTab(key)} key={key}>{label}</button>)}</div>

@@ -1,0 +1,7 @@
+node_modules
+dist
+data
+*.tsbuildinfo
+__pycache__
+.pytest_cache
+.env

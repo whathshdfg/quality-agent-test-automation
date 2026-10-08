@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: quality-agent-studio
+    runtime: docker
+    plan: starter
+    rootDir: atoms-demo
+    dockerfilePath: ./atoms-demo/Dockerfile
+    dockerContext: ./atoms-demo
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://api.deepseek.com
+      - key: OPENAI_MODEL
+        value: deepseek-chat
+      - key: STUDIO_DB_PATH
+        value: /data/studio.db
+    disk:
+      name: studio-data
+      mountPath: /data
+      sizeGB: 1
