@@ -123,6 +123,8 @@ python -m pytest
 
 ## Render 部署
 
+在线 Demo：https://quality-agent-studio.onrender.com
+
 `render.yaml` 和 `Dockerfile` 已准备好将 React 与 FastAPI 部署为同一个 Web Service。创建 Render Blueprint 时指定：
 
 - 仓库：`https://github.com/whathshdfg/quality-agent-test-automation`
