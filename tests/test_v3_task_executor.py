@@ -1,7 +1,11 @@
-from app.v3.persistence.task_repository import TaskRepository
+from app.v3.persistence.task_repository import (
+    TaskRepository,
+)
 from app.v3.schemas.event import TaskEventType
 from app.v3.schemas.task import TaskStatus
-from app.v3.services.task_executor import TaskExecutor
+from app.v3.services.task_executor import (
+    TaskExecutor,
+)
 
 
 def test_executor_completes_task_and_persists_node_events(
@@ -69,15 +73,22 @@ def test_executor_completes_task_and_persists_node_events(
     finally:
         executor.shutdown()
 
-    assert completed.status == TaskStatus.COMPLETED
+    assert completed.status == (
+        TaskStatus.COMPLETED
+    )
     assert completed.current_node == "completed"
     assert completed.progress == 100
     assert completed.error_message is None
 
     assert completed.result is not None
-    assert completed.result["report"] == "# 测试报告"
     assert (
-        completed.result["metrics"]["passed_cases"]
+        completed.result["report"]
+        == "# 测试报告"
+    )
+    assert (
+        completed.result["metrics"][
+            "passed_cases"
+        ]
         == 3
     )
 
@@ -89,7 +100,9 @@ def test_executor_completes_task_and_persists_node_events(
         "run_id": task.task_id,
     }
 
-    stored = repository.get_task(task.task_id)
+    stored = repository.get_task(
+        task.task_id
+    )
 
     assert stored is not None
     assert stored.status == TaskStatus.COMPLETED
@@ -134,7 +147,35 @@ def test_executor_marks_task_failed(tmp_path):
         requirement,
         **kwargs,
     ):
-        raise RuntimeError("workflow exploded")
+        node_event_sink = kwargs[
+            "node_event_sink"
+        ]
+
+        node_event_sink(
+            TaskEventType.NODE_STARTED,
+            "execute_tests",
+            {
+                "task_run_id": (
+                    "node_run_failed_001"
+                ),
+            },
+        )
+        node_event_sink(
+            TaskEventType.NODE_FAILED,
+            "execute_tests",
+            {
+                "task_run_id": (
+                    "node_run_failed_001"
+                ),
+                "error": (
+                    "workflow exploded"
+                ),
+            },
+        )
+
+        raise RuntimeError(
+            "workflow exploded"
+        )
 
     executor = TaskExecutor(
         max_workers=1,
@@ -157,7 +198,9 @@ def test_executor_marks_task_failed(tmp_path):
         "RuntimeError: workflow exploded"
     )
 
-    stored = repository.get_task(task.task_id)
+    stored = repository.get_task(
+        task.task_id
+    )
 
     assert stored is not None
     assert stored.status == TaskStatus.FAILED
@@ -175,5 +218,22 @@ def test_executor_marks_task_failed(tmp_path):
     ] == [
         TaskEventType.TASK_QUEUED,
         TaskEventType.TASK_STARTED,
+        TaskEventType.NODE_STARTED,
+        TaskEventType.NODE_FAILED,
         TaskEventType.TASK_FAILED,
     ]
+
+    assert (
+        events[2].node_name
+        == "execute_tests"
+    )
+    assert (
+        events[3].node_name
+        == "execute_tests"
+    )
+    assert events[3].payload == {
+        "task_run_id": (
+            "node_run_failed_001"
+        ),
+        "error": "workflow exploded",
+    }

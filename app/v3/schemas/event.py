@@ -13,7 +13,7 @@ class TaskEventType(str, Enum):
 
     NODE_STARTED = "node.started"
     NODE_COMPLETED = "node.completed"
-
+    NODE_FAILED = "node.failed"
 
 class TaskEvent(BaseModel):
     event_id: int

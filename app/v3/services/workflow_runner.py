@@ -8,7 +8,7 @@ from app.agent_graph_v2 import (
     initial_v2_state,
 )
 from app.v3.schemas.event import TaskEventType
-
+import pytest
 
 NodeEventSink = Callable[
     [
@@ -104,17 +104,31 @@ def run_v3_workflow(
                 )
             continue
 
-        if "result" in data:
-            error = data.get("error")
+        if "result" not in data:
+            continue
 
-            if error is None and node_event_sink is not None:
-                node_event_sink(
-                    TaskEventType.NODE_COMPLETED,
-                    node_name,
-                    {
-                        "task_run_id": task_run_id,
-                    },
-                )
+        error = data.get("error")
+
+        if node_event_sink is None:
+            continue
+
+        if error is None:
+            node_event_sink(
+                TaskEventType.NODE_COMPLETED,
+                node_name,
+                {
+                    "task_run_id": task_run_id,
+                },
+            )
+        else:
+            node_event_sink(
+                TaskEventType.NODE_FAILED,
+                node_name,
+                {
+                    "task_run_id": task_run_id,
+                    "error": str(error)[:2000],
+                },
+            )
 
     if final_state is None:
         raise RuntimeError(
@@ -122,3 +136,98 @@ def run_v3_workflow(
         )
 
     return final_state
+
+class FakeFailingStreamGraph:
+    def stream(
+        self,
+        input,
+        config,
+        *,
+        stream_mode,
+    ):
+        yield (
+            "tasks",
+            {
+                "id": "node_run_failed_001",
+                "name": "execute_tests",
+                "input": input,
+                "triggers": [
+                    "start:execute_tests"
+                ],
+            },
+        )
+
+        yield (
+            "tasks",
+            {
+                "id": "node_run_failed_001",
+                "name": "execute_tests",
+                "error": "HTTP connection failed",
+                "interrupts": [],
+                "result": None,
+            },
+        )
+
+        raise RuntimeError(
+            "HTTP connection failed"
+        )
+
+
+def test_run_v3_workflow_emits_node_failed_before_raising():
+    graph = FakeFailingStreamGraph()
+    recorded_events = []
+
+    def fake_graph_factory(
+        operation_runner=None,
+        checkpointer=None,
+    ):
+        return graph
+
+    def record_event(
+        event_type,
+        node_name,
+        payload,
+    ):
+        recorded_events.append(
+            (
+                event_type,
+                node_name,
+                payload,
+            )
+        )
+
+    with pytest.raises(
+        RuntimeError,
+        match="HTTP connection failed",
+    ):
+        run_v3_workflow(
+            requirement="测试支付接口异常",
+            model_mode="rule",
+            run_id="task_failed_001",
+            node_event_sink=record_event,
+            graph_factory=fake_graph_factory,
+        )
+
+    assert recorded_events == [
+        (
+            TaskEventType.NODE_STARTED,
+            "execute_tests",
+            {
+                "task_run_id": (
+                    "node_run_failed_001"
+                ),
+            },
+        ),
+        (
+            TaskEventType.NODE_FAILED,
+            "execute_tests",
+            {
+                "task_run_id": (
+                    "node_run_failed_001"
+                ),
+                "error": (
+                    "HTTP connection failed"
+                ),
+            },
+        ),
+    ]
