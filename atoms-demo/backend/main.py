@@ -32,11 +32,11 @@ DEMO_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = DEMO_ROOT.parent
 load_dotenv(REPOSITORY_ROOT / ".env")
 
-database_path = Path(
-    os.getenv("STUDIO_DB_PATH", str(DEMO_ROOT / "data" / "studio.db"))
+database = os.getenv("DATABASE_URL") or os.getenv(
+    "STUDIO_DB_PATH", str(DEMO_ROOT / "data" / "studio.db")
 )
 static_path = Path(os.getenv("STUDIO_STATIC_DIR", str(DEMO_ROOT / "dist")))
-repository = StudioRepository(database_path)
+repository = StudioRepository(database)
 
 app = FastAPI(title="Quality Agent Studio API", version="1.0.0")
 app.add_middleware(
@@ -68,6 +68,7 @@ def health() -> dict:
         "status": "ok",
         "model_configured": bool(os.getenv("OPENAI_API_KEY")),
         "model": os.getenv("OPENAI_MODEL", "gpt-4.1-mini"),
+        "database": repository.backend_name,
     }
 
 

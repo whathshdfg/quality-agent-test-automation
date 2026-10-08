@@ -1,7 +1,7 @@
 import json
 
 from backend.generator import GeneratedApp, parse_generated_app, validate_generated_app
-from backend.repository import StudioRepository
+from backend.repository import StudioRepository, normalize_database_url
 
 
 VALID_HTML = """<!doctype html><html lang='zh-CN'><head><meta charset='utf-8'><title>订单工作台</title><style>body{font-family:system-ui;margin:0;padding:32px;background:#f5f7fa;color:#172033}main{max-width:800px;margin:auto}button{padding:10px 16px;border:0;background:#176b5b;color:white;cursor:pointer}</style></head><body><main><h1>订单工作台</h1><p>在这里创建和管理业务订单。</p><button id='add'>新增订单</button><section id='orders'></section></main><script>document.querySelector('#add').onclick=()=>{document.querySelector('#orders').textContent='已创建一条新订单';document.body.dataset.clicked='1';};</script></body></html>"""
@@ -19,6 +19,14 @@ def test_repository_saves_and_restores_versions(tmp_path):
     assert restored["current_version"] == 2
     assert restored["version"]["html"] == VALID_HTML
     assert len(restored["versions"]) == 2
+
+    reopened = StudioRepository(tmp_path / "studio.db")
+    assert reopened.get_project(project["id"])["current_version"] == 2
+
+
+def test_render_postgres_url_uses_psycopg_driver():
+    database_url = "postgresql://studio:secret@example.test/studio"
+    assert normalize_database_url(database_url).startswith("postgresql+psycopg://")
 
 
 def test_generated_app_parser_accepts_expected_contract():

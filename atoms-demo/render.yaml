@@ -2,7 +2,7 @@ services:
   - type: web
     name: quality-agent-studio
     runtime: docker
-    plan: starter
+    plan: free
     rootDir: atoms-demo
     dockerfilePath: ./atoms-demo/Dockerfile
     dockerContext: ./atoms-demo
@@ -14,9 +14,13 @@ services:
         value: https://api.deepseek.com
       - key: OPENAI_MODEL
         value: deepseek-chat
-      - key: STUDIO_DB_PATH
-        value: /data/studio.db
-    disk:
-      name: studio-data
-      mountPath: /data
-      sizeGB: 1
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quality-agent-studio-db
+          property: connectionString
+
+databases:
+  - name: quality-agent-studio-db
+    plan: free
+    databaseName: quality_agent_studio
+    user: quality_agent_studio

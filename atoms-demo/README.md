@@ -12,7 +12,7 @@ Quality Agent Studio 是一个需求驱动的应用生成与质量评审工作�
 - `sandbox="allow-scripts"` iframe 运行预览，不授予同源权限。
 - CSP 禁用生成应用的网络、外部脚本、表单提交、嵌套页面和插件内容。
 - 受控 `postMessage` 存储桥，支持生成应用在浏览器中保存数据。
-- SQLite 保存项目、对话和所有代码版本。
+- 本地使用 SQLite，线上使用 PostgreSQL 保存项目、对话和所有代码版本。
 - 历史版本查看、恢复为新版本，以及 HTML 源码下载。
 - 模型未配置、调用失败、校验失败和连接失败的可见错误及重试入口。
 - 测试资产生成、编辑、覆盖缺口分析和 Markdown/JSON 导出。
@@ -21,7 +21,7 @@ Quality Agent Studio 是一个需求驱动的应用生成与质量评审工作�
 
 ```text
 atoms-demo/
-|-- backend/               # 独立 FastAPI、SQLite、模型生成与校验
+|-- backend/               # 独立 FastAPI、数据库仓储、模型生成与校验
 |-- src/studio/            # 应用生成工作区、API、隔离预览
 |-- src/features/          # 原有测试资产规则引擎
 |-- Dockerfile             # 前后端单服务生产镜像
@@ -102,7 +102,7 @@ python -m pytest
   → 调用真实模型生成结构化文件
   → 校验 JSON、HTML 结构、体积和危险能力
   → 校验失败时携带错误自动修复（最多两次）
-  → SQLite 保存新版本
+  → 数据库保存新版本
   → 沙箱预览
 ```
 
@@ -116,7 +116,8 @@ python -m pytest
 
 ## 数据持久化
 
-- 项目、对话和源码版本保存在 `STUDIO_DB_PATH` 指向的 SQLite 数据库，默认位置为 `atoms-demo/data/studio.db`。
+- 本地项目、对话和源码版本保存在 `STUDIO_DB_PATH` 指向的 SQLite 数据库，默认位置为 `atoms-demo/data/studio.db`。
+- 部署环境存在 `DATABASE_URL` 时自动切换到 PostgreSQL；该配置优先于 `STUDIO_DB_PATH`。
 - 生成应用自身的数据通过存储桥保存在访问者浏览器中，每个项目相互隔离。
 - 原质量工作台任务仍使用浏览器 localStorage。
 
@@ -129,7 +130,7 @@ python -m pytest
 - Blueprint 路径：`atoms-demo/render.yaml`
 - 密钥：在 Render 中填写 `OPENAI_API_KEY`
 
-Blueprint 使用 Starter Web Service 和 1 GB 持久磁盘，将 SQLite 写入 `/data/studio.db`。Render 免费 Web Service 不支持持久磁盘，使用免费实例会在重启或休眠后丢失 SQLite 数据，因此不适合本 Demo 的持久化要求。
+Blueprint 会创建一个免费 Web Service 和一个 1 GB 免费 PostgreSQL 数据库，并自动注入 `DATABASE_URL`，不需要购买持久磁盘。免费 Web Service 空闲 15 分钟后会休眠，首次唤醒可能需要约一分钟；免费 PostgreSQL 创建 30 天后过期，适合本次笔试评审周期。
 
 部署完成后，访问 `/api/health`，确认 `status` 为 `ok`、`model_configured` 为 `true`，再从未登录浏览器完成一次生成和刷新恢复测试。
 
@@ -138,5 +139,6 @@ Blueprint 使用 Starter Web Service 和 1 GB 持久磁盘，将 SQLite 写入 `
 - 每次生成会等待模型返回完整 HTML，复杂应用可能需要一到三分钟。
 - 当前仅生成单文件前端应用，不运行 npm 安装、服务端代码或任意 Shell 命令。
 - 项目数据没有用户账号隔离；公开链接上的项目历史对所有访问者可见。
-- SQLite 单实例适合演示，不适合横向扩容和高并发协作。
+- Render 免费 PostgreSQL 30 天后过期，正式长期运行需要迁移到长期数据库或付费实例。
+- 当前没有账号权限隔离，不适合公开的多人协作生产环境。
 - 生成内容仍需要人工评审，安全规则不能证明代码绝对安全。

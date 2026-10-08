@@ -13,7 +13,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     STUDIO_STATIC_DIR=/app/dist \
-    STUDIO_DB_PATH=/data/studio.db
+    STUDIO_DB_PATH=/app/data/studio.db
 
 COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --no-cache-dir -r backend/requirements.txt
